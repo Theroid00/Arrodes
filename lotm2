@@ -1,0 +1,112 @@
+import requests
+import bs4
+import help
+
+def aliases(name: str):
+    name = help.capitalize_except_unwanted_words(name).replace(" ", "_")
+    print(name.split())
+    url = f"https://lordofthemysteries.fandom.com/wiki/{name}"
+    print(url)
+    r = requests.get(url)
+    print(r)
+    x = bs4.BeautifulSoup(r.text , 'html.parser')
+    aliases = []
+    for head in x.find_all("h3"):
+        if head.text == "Aliases":
+                for li in head.parent.find_all("li"):
+                    print(li.text)
+                    try:
+                        text = li.text[:li.text.index("[")]
+                    except ValueError:
+                        text = li.text
+                    aliases.append(text)
+    print(aliases)
+    if len(aliases) == 0:
+        return None
+    return aliases
+
+def titles(name : str):
+    name = help.capitalize_except_unwanted_words(name).replace(" ", "_")
+    url = f"https://lordofthemysteries.fandom.com/wiki/{name}"
+    r = requests.get(url)
+    x = bs4.BeautifulSoup(r.text , 'html.parser')
+    titles = []
+    for head in x.find_all("h3"):
+        if head.text == "Titles":
+                for li in head.parent.find_all("li"):
+                    print(li.prettify())
+                    s_text = ""
+                    for span in li.find_all("span"):
+                        try:
+                            span["style"]
+                        except KeyError:
+                            continue
+                        try:
+                            s_text += span.text[:span.text.index("[")]
+                        except ValueError:
+                            s_text += span.text
+                    try:
+                        text = li.text[:li.text.index("[")] + s_text
+                    except ValueError:
+                        text = li.text + s_text
+                    titles.append(text)
+    if len(titles) == 0:
+        return None
+    return titles
+
+def pathways(name : str):
+    name = help.capitalize_except_unwanted_words(name).replace(" ", "_")
+    print(name)
+    url = f"https://lordofthemysteries.fandom.com/wiki/{name}"
+    r = requests.get(url)
+    x = bs4.BeautifulSoup(r.text , 'html.parser')
+    pathways = []
+    head = x.find("h3" , string = 'Pathway(s)')
+    for a in head.parent.find_all("a"):
+        if not a.text == '':
+            try:
+                l = a.text[:a.text.index("[")]
+                pathways.append(l)
+            except:
+                pathways.append(a.text)
+            
+    if len(pathways) == 0:
+        return None
+        
+    return pathways
+
+def authorities(name : str):
+    name = help.capitalize_except_unwanted_words(name).replace(" ", "_").strip()
+    url = f"https://lordofthemysteries.fandom.com/wiki/{name}"
+    r = requests.get(url)
+    x = bs4.BeautifulSoup(r.text , 'html.parser')
+    Authorities = []
+    head = x.find("h3" , string = 'Authorities')
+    for a in head.parent.find_all("a"):
+        if not a.text == '':
+            try:
+                a['title']
+            except KeyError:
+                continue
+            try:
+                text = a.text[:a.text.index("[")]
+                Authorities.append(text)
+            except:
+                Authorities.append(a.text)
+    if len(Authorities) == 0:
+        return None
+    return Authorities
+
+def get_image(name : str):
+    name = help.capitalize_except_unwanted_words(name).replace(" ", "_").strip()
+    url = f"https://lordofthemysteries.fandom.com/wiki/{name}"
+    r = requests.get(url)
+    x = bs4.BeautifulSoup(r.text , 'html.parser')
+    try:
+        return x.find("figure" , class_ = "pi-item pi-image").find("img")["src"]
+    except AttributeError:
+        return None
+
+
+
+
