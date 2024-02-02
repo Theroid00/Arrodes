@@ -99,7 +99,7 @@ class CharacterCommands(commands.Cog):
     @commands.slash_command(name="image", description="Returns the image of the character.")
     async def image(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
         character = api.Character(character_name)
-        await ctx.send('\n'.join(f'{i+1}. {images}' for i, images in enumerate(character.image)))
+        await ctx.send(character.image)
 
 def setup(bot):
     bot.add_cog(CharacterCommands(bot))
