@@ -23,6 +23,7 @@ class Character(objectStructures.CharacterStructure):
         self.masters = self.get_masters()
         self.enemies = self.get_enemies()
         self.allies = self.get_allies()
+        self.image = self.get_image()
         
         
     def get_name(self) -> str:
