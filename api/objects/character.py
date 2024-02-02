@@ -380,3 +380,13 @@ class Character(objectStructures.CharacterStructure):
             allies.append(text)
         
         return allies
+    
+    def get_image(self) -> str:
+        
+        '''Returns the image of the character.'''
+        
+        try:
+            figure_header = self.parsed.find("figure" , class_ = "pi-item pi-image")
+            return figure_header.find("img")["src"]
+        except:
+            return None
