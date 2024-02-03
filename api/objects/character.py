@@ -420,3 +420,55 @@ class Character(objectStructures.CharacterStructure):
             affliations.append(text)
         
         return affliations
+
+    def get_occupation(self) -> list[str]:
+            
+            '''Returns the occupation of the character.'''
+            
+            occupations = []
+            head = self.parsed.find("h3" , string = 'Occupation(s)')
+            
+            try:
+                head.parent
+            except AttributeError:
+                return [None]
+            
+            lists = head.parent.find_all("li")
+            
+            if len(lists) == 0:
+                return head.parent.find("div").text
+            
+            for li in lists:
+                try:
+                    text = li.text[:li.text.index("[")]
+                except ValueError:
+                    text = li.text
+                occupations.append(text)
+            
+            return occupations
+    
+    def get_religion(self) -> list[str]:
+        
+        '''Returns the religion of the character.'''
+        
+        religions = []
+        head = self.parsed.find("h3" , string = 'Religion(s)')
+        
+        try:
+            head.parent
+        except AttributeError:
+            return [None]
+        
+        lists = head.parent.find_all("li")
+        
+        if len(lists) == 0:
+            return head.parent.find("div").text
+        
+        for li in lists:
+            try:
+                text = li.text[:li.text.index("[")]
+            except ValueError:
+                text = li.text
+            religions.append(text)
+        
+        return religions
