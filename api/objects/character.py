@@ -28,7 +28,6 @@ class Character(objectStructures.CharacterStructure):
         self.occupation = self.get_occupation()
         self.religion = self.get_religion()
         
-        
     def get_name(self) -> str:
         
         '''Returns the name of the character.'''
@@ -211,7 +210,11 @@ class Character(objectStructures.CharacterStructure):
         except AttributeError:
             return [None]
         
-        for li in head.parent.find_all("li"):
+        lists = head.parent.find_all("li")
+        if len(lists) == 0:
+            return head.parent.find("div")
+        
+        for li in lists:
             s_text = ""
             for span in li.find_all("span"):
                 try:
@@ -394,7 +397,7 @@ class Character(objectStructures.CharacterStructure):
             return figure_header.find("img")["src"]
         except:
             return "No Image exists yet." 
-
+    
     def get_affliation(self) -> list[str]:
         
         '''Returns the affliation of the character.'''
@@ -420,7 +423,7 @@ class Character(objectStructures.CharacterStructure):
             affliations.append(text)
         
         return affliations
-
+        
     def get_occupation(self) -> list[str]:
             
             '''Returns the occupation of the character.'''
