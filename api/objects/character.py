@@ -394,3 +394,29 @@ class Character(objectStructures.CharacterStructure):
             return figure_header.find("img")["src"]
         except:
             return "No Image exists yet." 
+
+    def get_affliation(self) -> list[str]:
+        
+        '''Returns the affliation of the character.'''
+        
+        affliations = []
+        head = self.parsed.find("h3" , string = 'Affiliation(s)')
+        
+        try:
+            head.parent
+        except AttributeError:
+            return [None]
+        
+        lists = head.parent.find_all("li")
+        
+        if len(lists) == 0:
+            return head.parent.find("div").text
+        
+        for li in lists:
+            try:
+                text = li.text[:li.text.index("[")]
+            except ValueError:
+                text = li.text
+            affliations.append(text)
+        
+        return affliations
