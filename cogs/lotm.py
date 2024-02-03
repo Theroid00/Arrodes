@@ -101,5 +101,20 @@ class CharacterCommands(commands.Cog):
         character = api.Character(character_name)
         await ctx.send(character.image)
 
+    @commands.slash_command(name="affliation", description="Returns the affliation of the character.")
+    async def affliation(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
+        character = api.Character(character_name)
+        await ctx.send('\n'.join(f'{i+1}. {affliate}' for i, affliate in enumerate(character.affliation)))
+    
+    @commands.slash_command(name="occupation", description="Returns the occupation of the character.")
+    async def occupation(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
+        character = api.Character(character_name)
+        await ctx.send('\n'.join(f'{i+1}. {occupation}' for i, occupation in enumerate(character.occupation)))
+
+    @commands.slash_command(name="religion", description="Returns the religion of the character.")
+    async def religion(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
+        character = api.Character(character_name)
+        await ctx.send('\n'.join(f'{i+1}. {religion}' for i, religion in enumerate(character.religion)))
+
 def setup(bot):
     bot.add_cog(CharacterCommands(bot))
