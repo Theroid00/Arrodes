@@ -393,4 +393,4 @@ class Character(objectStructures.CharacterStructure):
             figure_header = self.parsed.find("figure" , class_ = "pi-item pi-image")
             return figure_header.find("img")["src"]
         except:
-            return None
+            return "No Image exists yet." 
