@@ -24,6 +24,9 @@ class Character(objectStructures.CharacterStructure):
         self.enemies = self.get_enemies()
         self.allies = self.get_allies()
         self.image = self.get_image()
+        self.affliation = self.get_affliation()
+        self.occupation = self.get_occupation()
+        self.religion = self.get_religion()
         
         
     def get_name(self) -> str:
