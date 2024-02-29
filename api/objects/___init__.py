@@ -1,1 +1,0 @@
-from api.objects.character import *
