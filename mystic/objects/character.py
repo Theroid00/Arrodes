@@ -70,6 +70,7 @@ class Character(objectStructures.CharacterStructure):
         self.intro = self.get_intro()
         self.honorific_name = self.get_honorific_name()
         self.symbol = self.get_symbol()
+        
 
     def get_name(self) -> str:
         """
@@ -103,8 +104,11 @@ class Character(objectStructures.CharacterStructure):
             if len(children2) != 0:
                 continue
             names.append(child.text)
+        
+        ching = list(zip(names[0::2], names[1::2]))
+        
 
-        return list(zip(names[0::2], names[1::2]))
+        return ching
 
     def get_birth(self) -> str:
         """
@@ -684,10 +688,12 @@ class Character(objectStructures.CharacterStructure):
         poem_ps = [p for div in poem_divs for p in div.find_all("p")]
 
         intros = [intro for intro in intros if intro not in poem_ps]
-
         intro_texts = [p.text.strip() for p in intros]
-
-        return intro_texts
+        
+        if intro_texts == []:
+            return intro_texts[1:]
+        else:
+            return intro_texts
 
     def get_honorific_name(self) -> list[str]:
         """
@@ -698,7 +704,9 @@ class Character(objectStructures.CharacterStructure):
 
         """
         honorific = self.parsed.find_all("div", class_="poem")
-
+        
+        
+        
         for div in honorific:
             for span in div.find_all("span", class_="refpopups-custom-content mobile-hidden", style="display:none"):
                 span.decompose()
@@ -707,8 +715,11 @@ class Character(objectStructures.CharacterStructure):
 
         if honorific_text == []:
             honorific_text = [p.text.strip() for p in honorific[0:1]]
+        
+       
+        
 
-        return honorific_text
+        return (honorific_text)
     
     def get_symbol(self) -> str:
         
@@ -724,3 +735,7 @@ class Character(objectStructures.CharacterStructure):
             return symbols
         except:
             return "The Character does not have a Mysticism Symbol."
+        
+    
+   
+
