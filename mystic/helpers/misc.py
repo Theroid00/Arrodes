@@ -1,6 +1,8 @@
 """Helper functions for miscellaneous tasks"""
-
+import nltk
 from nltk import pos_tag
+
+#nltk.download('averaged_perceptron_tagger')
 
 
 def format_name(text):
