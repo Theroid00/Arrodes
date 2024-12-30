@@ -12,10 +12,10 @@ Arrodes is an advanced Discord bot built using the Disnake library. Designed to 
 - Python 3.8 or higher
 - Libraries:
   - `disnake`
-  - 'bs4'
-  - 'requests'
-  - 'nltk'
-  - See `requirements.txt` for the full list
+  - `beautifulsoup4`
+  - `requests`
+  - `nltk`
+  - See `requirements.txt` for the full list.
 
 ## Installation
 1. Clone the repository:
