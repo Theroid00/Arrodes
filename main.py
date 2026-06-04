@@ -1,6 +1,9 @@
 import os
+from dotenv import load_dotenv
 from disnake.ext import commands
 import disnake
+
+load_dotenv()
 
 intents = disnake.Intents.default()
 intents.members = True
@@ -20,7 +23,9 @@ for filename in os.listdir(cogs_folder):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
         
+from keep_alive import start_keep_alive
 
+# Start the keep-alive HTTP server (runs in a daemon thread)
+start_keep_alive()
 
-
-bot.run('')
+bot.run(os.getenv('BOT_TOKEN'))

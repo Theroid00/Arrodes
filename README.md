@@ -1,3 +1,13 @@
+---
+title: Arrodes
+emoji: 🔮
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Arrodes
 
 Arrodes is an advanced Discord bot built using the Disnake library. Designed to streamline server management and boost community engagement, it offers dynamic features and seamless API integrations.
