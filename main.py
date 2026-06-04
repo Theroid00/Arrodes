@@ -14,16 +14,26 @@ intents.message_content = True
 sync = commands.CommandSyncFlags()
 sync.all()
 
+print("=== STARTING DIAGNOSTIC CHECKS ===")
+try:
+    print("1. Resolving discord.com...")
+    resolved = socket.getaddrinfo("discord.com", 443)
+    for res in resolved:
+        print(f"   Family: {res[0]}, Addr: {res[4]}")
+except Exception as e:
+    print("   DNS Resolution failed:", e)
+
+try:
+    print("2. Testing connection to discord.com via urllib...")
+    import ssl
+    context = ssl.create_default_context()
+    with urllib.request.urlopen("https://discord.com", timeout=10, context=context) as response:
+        print("   urllib Response Status:", response.getcode())
+except Exception as e:
+    print("   urllib connection failed:", e)
+print("=== DIAGNOSTIC CHECKS COMPLETE ===")
+
 bot = commands.InteractionBot(reload=True, command_sync_flags=sync)
-
-# Override login to instantiate the connector inside the active event loop
-original_login = bot.login
-async def custom_login(token: str):
-    if bot.http.connector is None:
-        bot.http.connector = aiohttp.TCPConnector(family=socket.AF_INET)
-    return await original_login(token)
-
-bot.login = custom_login
 
 # Get the path to the "cogs" folder
 cogs_folder = os.path.join(os.path.dirname(__file__), 'cogs')
