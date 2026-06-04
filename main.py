@@ -2,8 +2,12 @@ import os
 from dotenv import load_dotenv
 from disnake.ext import commands
 import disnake
+from keep_alive import start_keep_alive
 
 load_dotenv()
+
+# Start keep-alive HTTP server for Render health checks/pings
+start_keep_alive()
 
 intents = disnake.Intents.default()
 intents.members = True
