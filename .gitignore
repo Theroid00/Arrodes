@@ -1,0 +1,22 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Environments / Credentials (Contains BOT_TOKEN!)
+.env
+.env.*
+
+# Scraper Local Cache
+.cache/
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
