@@ -5,3 +5,5 @@ Data is scraped from https://lordofthemysteries.fandom.com/wiki/Lord_of_Mysterie
 """
 
 from mystic.objects.character import Character
+from mystic.objects.pathway import Pathway
+from mystic.objects.artifact import SealedArtifact
