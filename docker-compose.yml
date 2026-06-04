@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  arrodes:
+    build: .
+    container_name: arrodes_bot
+    restart: always          # auto-restart on crash or VM reboot
+    env_file:
+      - .env                 # reads BOT_TOKEN from .env file
+    volumes:
+      - ./.cache:/app/.cache # persist wiki HTML cache across restarts
