@@ -27,7 +27,7 @@ class Character(objectStructures.CharacterStructure):
     enemies: The enemies of the character.
     allies: The allies of the character.
     image: The image of the character.
-    affliation: The affliation of the character.
+    affiliation: The affiliation of the character.
     occupation: The occupation of the character.
     religion: The religion of the character.
     residence: The residence of the character.
@@ -63,7 +63,7 @@ class Character(objectStructures.CharacterStructure):
         self.enemies = self.get_enemies()
         self.allies = self.get_allies()
         self.image = self.get_image()
-        self.affliation = self.get_affliation()
+        self.affiliation = self.get_affiliation()
         self.occupation = self.get_occupation()
         self.religion = self.get_religion()
         self.residence = self.get_residence()
@@ -520,7 +520,7 @@ class Character(objectStructures.CharacterStructure):
         except (AttributeError, TypeError, KeyError):
             return "No Image exists yet."
 
-    def get_affliation(self) -> Optional[list]:
+    def get_affiliation(self) -> Optional[list]:
         """
         Retrieves the affiliations of the character.
 
@@ -528,7 +528,7 @@ class Character(objectStructures.CharacterStructure):
             Optional[list]: A list of affiliations, or None if not found.
         """
 
-        affliations = []
+        affiliations = []
         head = self.parsed.find("h3", string="Affiliation(s)")
 
         try:
@@ -539,16 +539,16 @@ class Character(objectStructures.CharacterStructure):
         lists = head.parent.find_all("li")
 
         if len(lists) == 0:
-            affliations.append(head.parent.find("div").text)
+            affiliations.append(head.parent.find("div").text)
 
         for li in lists:
             try:
                 text = li.text[: li.text.index("[")]
             except ValueError:
                 text = li.text
-            affliations.append(text)
+            affiliations.append(text)
 
-        return affliations
+        return affiliations
 
     def get_occupation(self) -> Optional[list]:
         """

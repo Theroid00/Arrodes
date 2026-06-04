@@ -138,7 +138,7 @@ class CharacterCommands(commands.Cog):
 
     @commands.slash_command(name="affiliation", description="Returns the affiliation of the character.")
     async def affiliation(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.affliation)
+        await self._execute_query(ctx, character_name, lambda c: c.affiliation)
 
     @commands.slash_command(name="occupation", description="Returns the occupation of the character.")
     async def occupation(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
