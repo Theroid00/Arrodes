@@ -45,133 +45,100 @@ class CharacterCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def _execute_query(self, ctx: disnake.ApplicationCommandInteraction, character_name: str, extractor):
-        """Helper to defer the response, fetch character, and edit the original message."""
+    @commands.slash_command(
+        name="character",
+        description="Search for a Lord of the Mysteries character profile."
+    )
+    async def character_command(
+        self, 
+        ctx: disnake.ApplicationCommandInteraction, 
+        character_name: str,
+        category: str = commands.Param(
+            default="summary",
+            choices=["summary", "profile", "mysticism", "relations"]
+        )
+    ):
+        """Displays formatted embeds for a character based on category."""
         await ctx.response.defer()
         try:
             character = await get_character(character_name)
-            data = extractor(character)
             
-            if isinstance(data, list):
-                content = _list_response(data)
+            title_name = character.get_name() or character_name.title()
+            if character.chinese_name:
+                chinese_str = ", ".join(f"{cn} ({en})" for cn, en in character.chinese_name)
+                embed_title = f"👤 {title_name} ({chinese_str})"
             else:
-                content = data
+                embed_title = f"👤 {title_name}"
+
+            embed = disnake.Embed(title=embed_title, color=0x6366F1)
+            
+            if character.image and character.image != "No Image exists yet.":
+                embed.set_thumbnail(url=character.image)
+
+            if category == "summary":
+                intro_text = "\n\n".join(character.intro) if isinstance(character.intro, list) else character.intro
+                if intro_text:
+                    truncated_intro = intro_text[:450] + "..." if len(intro_text) > 450 else intro_text
+                    embed.description = f"*{truncated_intro}*"
                 
-            await ctx.edit_original_response(content=content or "No information found.")
+                embed.add_field(name="Gender", value=character.gender or "Unknown", inline=True)
+                
+                spec_val = ", ".join(character.species) if isinstance(character.species, list) else (character.species or "Unknown")
+                embed.add_field(name="Species", value=spec_val, inline=True)
+                embed.add_field(name="Birth", value=character.birth or "Unknown", inline=True)
+                
+                pathway_val = ", ".join(character.pathways) if character.pathways else "None"
+                embed.add_field(name="Pathway(s)", value=pathway_val, inline=False)
+                
+                titles_val = ", ".join(character.titles) if character.titles else "None"
+                embed.add_field(name="Titles", value=titles_val, inline=False)
+
+            elif category == "profile":
+                origin_val = ", ".join(character.origin) if character.origin else "Unknown"
+                embed.add_field(name="Birth Place / Origin", value=origin_val, inline=True)
+                
+                res_val = ", ".join(character.residence) if character.residence else "Unknown"
+                embed.add_field(name="Residence", value=res_val, inline=True)
+                
+                height_val = ", ".join(character.height) if character.height else "Unknown"
+                embed.add_field(name="Height", value=height_val, inline=True)
+                
+                hair = ", ".join(character.hair_colour) if isinstance(character.hair_colour, list) else (character.hair_colour or "Unknown")
+                eyes = ", ".join(character.eye_colour) if isinstance(character.eye_colour, list) else (character.eye_colour or "Unknown")
+                embed.add_field(name="Appearance", value=f"👁️ Eye: {eyes}\n💇 Hair: {hair}", inline=False)
+
+            elif category == "mysticism":
+                embed.color = 0xF59E0B
+                
+                if character.honorific_name:
+                    poetry = "\n".join(character.honorific_name)
+                    embed.description = f"### Honorific Name\n>>> {poetry}"
+                
+                auth_val = ", ".join(character.authorities) if character.authorities else "None"
+                embed.add_field(name="Authorities / Domains", value=auth_val, inline=False)
+                
+                if character.symbol and "does not have" not in character.symbol:
+                    embed.set_image(url=character.symbol)
+
+            elif category == "relations":
+                embed.add_field(name="Allies", value=", ".join(character.allies) if character.allies else "None", inline=False)
+                embed.add_field(name="Enemies", value=", ".join(character.enemies) if character.enemies else "None", inline=False)
+                
+                rel_val = ", ".join(character.relatives) if character.relatives else "None"
+                embed.add_field(name="Relatives", value=rel_val, inline=True)
+                
+                masters_val = ", ".join(character.masters) if character.masters else "None"
+                embed.add_field(name="Masters", value=masters_val, inline=True)
+                
+                aff_val = ", ".join(character.affiliation) if character.affiliation else "None"
+                embed.add_field(name="Affiliation", value=aff_val, inline=False)
+
+            await ctx.edit_original_response(embed=embed)
+            
         except NotFoundError as e:
             await ctx.edit_original_response(content=f"❌ {e}")
         except Exception as e:
             await ctx.edit_original_response(content=f"⚠️ An unexpected error occurred: {e}")
-
-    @commands.slash_command(name="name", description="Returns the name of the character.")
-    async def name(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.get_name() or "No name found.")
-
-    @commands.slash_command(name="chinese_name", description="Returns the Chinese names of the character.")
-    async def chinese_name(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        def extract(c):
-            names = c.chinese_name
-            if not names:
-                return "No Chinese name found."
-            return '\n'.join(f'{i + 1}. {cn} ({en})' for i, (cn, en) in enumerate(names))
-        await self._execute_query(ctx, character_name, extract)
-
-    @commands.slash_command(name="birth", description="Returns the birth of the character.")
-    async def birth(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.birth or "No birth information found.")
-
-    @commands.slash_command(name="gender", description="Returns the gender of the character.")
-    async def gender(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.gender or "No gender information found.")
-
-    @commands.slash_command(name="species", description="Returns the species of the character.")
-    async def species(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.species)
-
-    @commands.slash_command(name="height", description="Returns the height of the character.")
-    async def height(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.height)
-
-    @commands.slash_command(name="eye_colour", description="Returns the eye colour of the character.")
-    async def eye_colour(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.eye_colour)
-
-    @commands.slash_command(name="hair_colour", description="Returns the hair colour of the character.")
-    async def hair_colour(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.hair_colour)
-
-    @commands.slash_command(name="aliases", description="Returns the aliases of the character.")
-    async def aliases(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.aliases)
-
-    @commands.slash_command(name="titles", description="Returns the titles of the character.")
-    async def titles(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.titles)
-
-    @commands.slash_command(name="pathways", description="Returns the pathways of the character.")
-    async def pathways(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.pathways)
-
-    @commands.slash_command(name="authorities", description="Returns the authorities of the character.")
-    async def authorities(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.authorities)
-
-    @commands.slash_command(name="relatives", description="Returns the relatives of the character.")
-    async def relatives(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.relatives)
-
-    @commands.slash_command(name="masters", description="Returns the masters of the character.")
-    async def masters(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.masters)
-
-    @commands.slash_command(name="enemies", description="Returns the enemies of the character.")
-    async def enemies(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.enemies)
-
-    @commands.slash_command(name="allies", description="Returns the allies of the character.")
-    async def allies(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.allies)
-
-    @commands.slash_command(name="image", description="Returns the image of the character.")
-    async def image(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.image)
-
-    @commands.slash_command(name="affiliation", description="Returns the affiliation of the character.")
-    async def affiliation(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.affiliation)
-
-    @commands.slash_command(name="occupation", description="Returns the occupation of the character.")
-    async def occupation(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.occupation)
-
-    @commands.slash_command(name="religion", description="Returns the religion of the character.")
-    async def religion(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.religion)
-
-    @commands.slash_command(name="residence", description="Returns the Residence of the character.")
-    async def residence(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.residence)
-
-    @commands.slash_command(name="origin", description="Returns the origin of the character.")
-    async def origin(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.origin)
-
-    @commands.slash_command(name="intro", description="Returns the Introduction of the character.")
-    async def intro(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.intro)
-
-    @commands.slash_command(name="honorific_name", description="Returns the Honorific name of the character.")
-    async def honorific_name(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        def extract(c):
-            names = c.honorific_name
-            if not names:
-                return "No honorific name found."
-            return '\n'.join(names)
-        await self._execute_query(ctx, character_name, extract)
-
-    @commands.slash_command(name="symbol", description="Returns the Symbol of the character.")
-    async def symbol(self, ctx: disnake.ApplicationCommandInteraction, character_name: str):
-        await self._execute_query(ctx, character_name, lambda c: c.symbol)
 
     @commands.slash_command(name="pathway", description="Returns details about a Beyonder Pathway.")
     async def pathway_command(self, ctx: disnake.ApplicationCommandInteraction, pathway_name: str):
