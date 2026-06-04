@@ -15,22 +15,37 @@ sync = commands.CommandSyncFlags()
 sync.all()
 
 print("=== STARTING DIAGNOSTIC CHECKS ===")
-try:
-    print("1. Resolving discord.com...")
-    resolved = socket.getaddrinfo("discord.com", 443)
-    for res in resolved:
-        print(f"   Family: {res[0]}, Addr: {res[4]}")
-except Exception as e:
-    print("   DNS Resolution failed:", e)
+import ssl
+
+def test_connection(family, name):
+    print(f"Testing direct TCP connection to discord.com ({name})...")
+    try:
+        s = socket.socket(family, socket.SOCK_STREAM)
+        s.settimeout(5)
+        resolved = socket.getaddrinfo("discord.com", 443, family=family)
+        if not resolved:
+            print(f"  No {name} address resolved.")
+            return
+        addr = resolved[0][4]
+        print(f"  Connecting to {addr}...")
+        s.connect(addr)
+        print(f"  TCP Connection to {name} succeeded!")
+        context = ssl.create_default_context()
+        ss = context.wrap_socket(s, server_hostname="discord.com")
+        print(f"  TLS Handshake with {name} succeeded!")
+        ss.close()
+    except Exception as e:
+        print(f"  Connection to {name} failed: {type(e).__name__} - {e}")
 
 try:
-    print("2. Testing connection to discord.com via urllib...")
-    import ssl
-    context = ssl.create_default_context()
-    with urllib.request.urlopen("https://discord.com", timeout=10, context=context) as response:
-        print("   urllib Response Status:", response.getcode())
+    test_connection(socket.AF_INET, "IPv4")
 except Exception as e:
-    print("   urllib connection failed:", e)
+    print("IPv4 test runner error:", e)
+
+try:
+    test_connection(socket.AF_INET6, "IPv6")
+except Exception as e:
+    print("IPv6 test runner error:", e)
 print("=== DIAGNOSTIC CHECKS COMPLETE ===")
 
 bot = commands.InteractionBot(reload=True, command_sync_flags=sync)
