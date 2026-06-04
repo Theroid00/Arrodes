@@ -1,5 +1,6 @@
 """Character class that represents a character in the Lord of the Mysteries."""
 
+from typing import Optional
 from mystic import objectStructures
 
 
@@ -72,7 +73,7 @@ class Character(objectStructures.CharacterStructure):
         self.symbol = self.get_symbol()
         
 
-    def get_name(self) -> str:
+    def get_name(self) -> Optional[str]:
         """
         Returns the name of the character.
 
@@ -80,9 +81,12 @@ class Character(objectStructures.CharacterStructure):
         str: The name of the character.
         """
 
-        return self.parsed.find("h2", class_="pi-title").text
+        try:
+            return self.parsed.find("h2", class_="pi-title").text
+        except AttributeError:
+            return None
 
-    def get_chinese_name(self) -> list[tuple]:
+    def get_chinese_name(self) -> list:
         """
         Returns the Chinese names of the character as a list of tuple ~ (Chinese Name, English Translation).
 
@@ -90,27 +94,28 @@ class Character(objectStructures.CharacterStructure):
         list[tuple]: The Chinese names of the character.
         """
 
-        names = []
-        head = self.parsed.find("h3", string="Chinese")
-        div = head.parent.find("div" , class_ = "pi-data-value pi-font")
+        try:
+            names = []
+            head = self.parsed.find("h3", string="Chinese")
+            div = head.parent.find("div", class_="pi-data-value pi-font")
 
-        children = div.findChildren("span")
+            children = div.findChildren("span")
 
-        if len(children) == 0:
-            names.append(div.text)
+            if len(children) == 0:
+                names.append(div.text)
 
-        for child in children:
-            children2 = child.findChildren("i")
-            if len(children2) != 0:
-                continue
-            names.append(child.text)
-        
-        ching = list(zip(names[0::2], names[1::2]))
-        
+            for child in children:
+                children2 = child.findChildren("i")
+                if len(children2) != 0:
+                    continue
+                names.append(child.text)
 
-        return ching
+            ching = list(zip(names[0::2], names[1::2]))
+            return ching
+        except AttributeError:
+            return []
 
-    def get_birth(self) -> str:
+    def get_birth(self) -> Optional[str]:
         """
         Retrieves the birth information of the character.
 
@@ -124,7 +129,7 @@ class Character(objectStructures.CharacterStructure):
         except AttributeError:
             return None
 
-    def get_gender(self) -> str:
+    def get_gender(self) -> Optional[str]:
         """
         Retrieves the gender of the character.
 
@@ -138,7 +143,7 @@ class Character(objectStructures.CharacterStructure):
         except AttributeError:
             return None
 
-    def get_species(self) -> list:
+    def get_species(self) -> Optional[list]:
         """
         Retrieves the species of the character.
 
@@ -166,12 +171,12 @@ class Character(objectStructures.CharacterStructure):
         except AttributeError:
             return None
 
-    def get_height(self) -> list[str]:
+    def get_height(self) -> Optional[list]:
         """
         Retrieves the height of the character.
 
         Returns:
-            list[str]: A list of heights, where each height is a string.
+            Optional[list]: A list of heights, or None if not found.
         """
 
         heights = []
@@ -194,7 +199,7 @@ class Character(objectStructures.CharacterStructure):
         except AttributeError:
             return None
 
-    def get_eye_colour(self) -> list:
+    def get_eye_colour(self) -> Optional[list]:
         """
         Retrieves the eye color(s) of the character.
 
@@ -223,7 +228,7 @@ class Character(objectStructures.CharacterStructure):
         except AttributeError:
             return None
 
-    def get_hair_colour(self) -> list:
+    def get_hair_colour(self) -> Optional[list]:
         """
         Retrieves the hair color(s) of the character.
 
@@ -249,16 +254,15 @@ class Character(objectStructures.CharacterStructure):
                     hair = child.text
                 hairs.append(hair)
             return hairs
-        except AttributeError:  # If the hair color is not found, return None
+        except AttributeError:
             return None
 
-    def get_aliases(self) -> list[str]:
+    def get_aliases(self) -> Optional[list]:
         """
         Retrieves the aliases of the character.
 
         Returns:
-            A list of strings representing the aliases of the character.
-            If no aliases are found, returns None.
+            Optional[list]: A list of aliases, or None if not found.
         """
 
         aliases = []
@@ -283,12 +287,12 @@ class Character(objectStructures.CharacterStructure):
 
         return aliases
 
-    def get_titles(self) -> list[str]:
+    def get_titles(self) -> Optional[list]:
         """
         Retrieves the titles associated with the character.
 
         Returns:
-            A list of strings representing the titles.
+            Optional[list]: A list of titles, or None if not found.
         """
 
         titles = []
@@ -321,12 +325,12 @@ class Character(objectStructures.CharacterStructure):
             titles.append(text)
         return titles
 
-    def get_pathways(self) -> list[str]:
+    def get_pathways(self) -> Optional[list]:
         """
         Retrieves the pathways associated with the character.
 
         Returns:
-            list[str]: A list of pathway names.
+            Optional[list]: A list of pathway names, or None if not found.
         """
 
         pathways = []
@@ -346,16 +350,16 @@ class Character(objectStructures.CharacterStructure):
                 try:
                     l = a.text[: a.text.index("[")]
                     pathways.append(l)
-                except:
+                except (ValueError, KeyError):
                     pathways.append(a.text)
         return pathways
 
-    def get_authorities(self) -> list[str]:
+    def get_authorities(self) -> Optional[list]:
         """
         Retrieves the list of authorities associated with the character.
 
         Returns:
-            list[str]: The list of authorities.
+            Optional[list]: The list of authorities, or None if not found.
         """
 
         authorities = []
@@ -374,19 +378,19 @@ class Character(objectStructures.CharacterStructure):
                     continue
                 try:
                     text = a.text[: a.text.index("[")]
-                except:
+                except (ValueError, KeyError):
                     text = a.text
                 authorities.append(text)
         if len(authorities) == 0:
             return None
         return authorities
 
-    def get_relatives(self) -> list[str]:
+    def get_relatives(self) -> Optional[list]:
         """
         Retrieves the list of relatives for the character.
 
         Returns:
-            A list of strings representing the relatives of the character.
+            Optional[list]: A list of relatives, or None if not found.
         """
 
         relatives = []
@@ -411,13 +415,12 @@ class Character(objectStructures.CharacterStructure):
 
         return relatives
 
-    def get_masters(self) -> list[str]:
+    def get_masters(self) -> Optional[list]:
         """
         Retrieves the list of masters associated with the character.
 
         Returns:
-            A list of strings representing the names of the masters.
-            If no masters are found, returns None.
+            Optional[list]: A list of masters, or None if not found.
         """
 
         masters = []
@@ -442,12 +445,12 @@ class Character(objectStructures.CharacterStructure):
 
         return masters
 
-    def get_enemies(self) -> list[str]:
+    def get_enemies(self) -> Optional[list]:
         """
         Retrieves a list of enemies associated with the character.
 
         Returns:
-            A list of strings representing the enemies.
+            Optional[list]: A list of enemies, or None if not found.
         """
 
         enemies = []
@@ -472,12 +475,12 @@ class Character(objectStructures.CharacterStructure):
 
         return enemies
 
-    def get_allies(self) -> list[str]:
+    def get_allies(self) -> Optional[list]:
         """
         Retrieves a list of allies associated with the character.
 
         Returns:
-            list[str]: A list of allies.
+            Optional[list]: A list of allies, or None if not found.
         """
 
         allies = []
@@ -514,16 +517,16 @@ class Character(objectStructures.CharacterStructure):
         try:
             figure_header = self.parsed.find("figure", class_="pi-item pi-image")
             return figure_header.find("img")["src"]
-        except:
+        except (AttributeError, TypeError, KeyError):
             return "No Image exists yet."
 
-    def get_affliation(self) -> list[str]:
+    def get_affliation(self) -> Optional[list]:
         """
         Retrieves the affiliations of the character.
 
         Returns:
-            list[str]: A list of affiliations.
-        """ 
+            Optional[list]: A list of affiliations, or None if not found.
+        """
 
         affliations = []
         head = self.parsed.find("h3", string="Affiliation(s)")
@@ -547,13 +550,12 @@ class Character(objectStructures.CharacterStructure):
 
         return affliations
 
-    def get_occupation(self) -> list[str]:
+    def get_occupation(self) -> Optional[list]:
         """
         Retrieves the occupation(s) of the character.
 
         Returns:
-            A list of strings representing the occupation(s) of the character.
-            If no occupation is found, returns None.
+            Optional[list]: A list of occupations, or None if not found.
         """
 
         occupations = []
@@ -578,13 +580,12 @@ class Character(objectStructures.CharacterStructure):
 
         return occupations
 
-    def get_religion(self) -> list[str]:
+    def get_religion(self) -> Optional[list]:
         """
         Retrieves the religion(s) of the character.
 
         Returns:
-            A list of strings representing the religion(s) of the character.
-            If no religion is found, returns None.
+            Optional[list]: A list of religions, or None if not found.
         """
 
         religions = []
@@ -609,15 +610,12 @@ class Character(objectStructures.CharacterStructure):
 
         return religions
 
-    def get_origin(self) -> list[str]:
+    def get_origin(self) -> list:
         """
         Retrieves the origin of the Character.
 
         Returns:
-
-            A list of strings representing the origin of the character.
-            If no origin is found, returns None.
-
+            list: A list of origins. Empty list if not found.
         """
         origins = []
         head = self.parsed.find("h3", string="Origin")
@@ -625,7 +623,7 @@ class Character(objectStructures.CharacterStructure):
         try:
             head.parent
         except AttributeError:
-            return [None]
+            return []
 
         lists = head.parent.find_all("li")
 
@@ -641,15 +639,12 @@ class Character(objectStructures.CharacterStructure):
 
         return origins
 
-    def get_residence(self) -> list[str]:
+    def get_residence(self) -> list:
         """
         Retrieves the residence of the Character.
 
         Returns:
-
-            A list of strings representing the Residences of the character.
-            If no residence is found, returns None.
-
+            list: A list of residences. Empty list if not found.
         """
         residences = []
         head = self.parsed.find("h3", string="Residence")
@@ -657,7 +652,7 @@ class Character(objectStructures.CharacterStructure):
         try:
             head.parent
         except AttributeError:
-            return [None]
+            return []
 
         lists = head.parent.find_all("li")
 
@@ -673,35 +668,28 @@ class Character(objectStructures.CharacterStructure):
 
         return residences
 
-    def get_intro(self) -> list[str]:
+    def get_intro(self) -> list:
         """
         Retrieves the intro of the Character.
 
         Returns:
-
-            A list of strings representing the intro of the character.
-            If no intro is found, returns None.
-
+            list: A list of intro paragraph strings.
         """
         intros = self.parsed.find_all("p")[7:12]
         poem_divs = self.parsed.find_all("div", class_="poem")
         poem_ps = [p for div in poem_divs for p in div.find_all("p")]
 
         intros = [intro for intro in intros if intro not in poem_ps]
-        intro_texts = [p.text.strip() for p in intros]
-        
-        if intro_texts == []:
-            return intro_texts[1:]
-        else:
-            return intro_texts
+        intro_texts = [p.text.strip() for p in intros if p.text.strip()]
+
+        return intro_texts
 
     def get_honorific_name(self) -> list[str]:
         """
         Retrieves the honorific name of the character.
 
         Returns:
-            A list of strings representing the honorific name of the character.
-
+            list: A list of honorific name strings.
         """
         honorific = self.parsed.find_all("div", class_="poem")
         
@@ -729,13 +717,12 @@ class Character(objectStructures.CharacterStructure):
             An image representing the symbol of mysticism of the character.
         '''
         try:
-            symbol = self.parsed.find("h2" , string = "Mysticism")
-            symbols = symbol.parent.find("figure" , class_ = "pi-item pi-image")
+            symbol = self.parsed.find("h2", string="Mysticism")
+            symbols = symbol.parent.find("figure", class_="pi-item pi-image")
             symbols = symbols.find("img")["src"]
             return symbols
-        except:
+        except (AttributeError, TypeError, KeyError):
             return "The Character does not have a Mysticism Symbol."
         
     
    
-
