@@ -1,4 +1,6 @@
 import os
+import socket
+import aiohttp
 from dotenv import load_dotenv
 from disnake.ext import commands
 import disnake
@@ -12,7 +14,8 @@ intents.message_content = True
 sync = commands.CommandSyncFlags()
 sync.all()
 
-bot = commands.InteractionBot(reload=True, command_sync_flags=sync)
+connector = aiohttp.TCPConnector(family=socket.AF_INET)
+bot = commands.InteractionBot(connector=connector, reload=True, command_sync_flags=sync)
 
 # Get the path to the "cogs" folder
 cogs_folder = os.path.join(os.path.dirname(__file__), 'cogs')
