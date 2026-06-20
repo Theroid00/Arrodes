@@ -97,19 +97,25 @@ class Character(objectStructures.CharacterStructure):
             head = self.parsed.find("h3", string="Chinese")
             div = head.parent.find("div", class_="pi-data-value pi-font")
 
-            children = div.findChildren("span")
+            lis = div.find_all("li")
+            if not lis:
+                text = helpers.misc.clean_text(div.text)
+                if text:
+                    return [(text, "")]
+                return []
 
-            if len(children) == 0:
-                names.append(div.text)
-
-            for child in children:
-                children2 = child.findChildren("i")
-                if len(children2) != 0:
-                    continue
-                names.append(child.text)
-
-            ching = list(zip(names[0::2], names[1::2]))
-            return ching
+            for li in lis:
+                chinese_span = li.find("span", class_="basic-tooltip")
+                english_span = li.find("span", class_="caption")
+                
+                chinese_text = helpers.misc.clean_text(chinese_span.text if chinese_span else li.text)
+                english_text = helpers.misc.clean_text(english_span.text if english_span else "")
+                
+                if english_text.startswith("(") and english_text.endswith(")"):
+                    english_text = english_text[1:-1].strip()
+                    
+                names.append((chinese_text, english_text))
+            return names
         except AttributeError:
             return []
 

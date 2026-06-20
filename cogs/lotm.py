@@ -81,7 +81,7 @@ class CharacterCommands(commands.Cog):
             
             title_name = character.get_name() or character_name.title()
             if character.chinese_name:
-                chinese_str = ", ".join(f"{cn} ({en})" for cn, en in character.chinese_name)
+                chinese_str = ", ".join(f"{cn} ({en})" if en else cn for cn, en in character.chinese_name)
                 embed_title = f"👤 {title_name} ({chinese_str})"
             else:
                 embed_title = f"👤 {title_name}"
