@@ -120,31 +120,92 @@ def build_character_embed(character: mystic.Character, category: str) -> disnake
     return embed
 
 
+async def pre_fetch_subpage(page_title: str):
+    """Asynchronously fetches a wiki page to populate the local disk cache."""
+    try:
+        await asyncio.to_thread(mystic.WikiPage, page_title)
+    except Exception as e:
+        print(f"Background caching failed for '{page_title}': {e}")
+
+
+class OverviewButton(disnake.ui.Button):
+    def __init__(self, character_name: str, style: disnake.ButtonStyle, category: str, view_ref: 'CharacterSubpageView'):
+        super().__init__(style=style, label="Overview", custom_id=f"char_subpage:{character_name}:overview:{category}")
+        self.view_ref = view_ref
+
+    async def callback(self, inter: disnake.MessageInteraction):
+        await self.view_ref.handle_click(inter, "overview")
+
+
+class SubpageButton(disnake.ui.Button):
+    def __init__(self, label: str, page_name: str, view_ref: 'CharacterSubpageView'):
+        style = disnake.ButtonStyle.primary if view_ref.current_page.lower() == label.lower() else disnake.ButtonStyle.secondary
+        super().__init__(style=style, label=label, custom_id=f"char_subpage:{view_ref.character_name}:{page_name}:{view_ref.category}")
+        self.view_ref = view_ref
+
+    async def callback(self, inter: disnake.MessageInteraction):
+        await self.view_ref.handle_click(inter, self.label)
+
+
 class CharacterSubpageView(disnake.ui.View):
     """View that represents sub-page navigation buttons for a character."""
     def __init__(self, character_name: str, subpages: list[str], current_page: str, category: str):
         super().__init__(timeout=300.0)
         self.character_name = character_name
+        self.subpages = subpages
         self.current_page = current_page
         self.category = category
         
         # 1. Overview Button
         overview_style = disnake.ButtonStyle.primary if current_page == "overview" else disnake.ButtonStyle.secondary
-        self.add_item(disnake.ui.Button(
-            style=overview_style,
-            label="Overview",
-            custom_id=f"char_subpage:{character_name}:overview:{category}"
-        ))
+        self.add_item(OverviewButton(character_name, overview_style, category, self))
         
         # 2. Subpage Buttons
         for sp in subpages:
             suffix = sp.split("/")[-1]
-            style = disnake.ButtonStyle.primary if current_page.lower() == suffix.lower() else disnake.ButtonStyle.secondary
-            self.add_item(disnake.ui.Button(
-                style=style,
-                label=suffix,
-                custom_id=f"char_subpage:{character_name}:{suffix}:{category}"
-            ))
+            self.add_item(SubpageButton(suffix, suffix, self))
+
+    async def handle_click(self, inter: disnake.MessageInteraction, page: str):
+        await inter.response.defer()
+        
+        self.current_page = page
+        
+        # Update styles dynamically in memory
+        for child in self.children:
+            if isinstance(child, disnake.ui.Button):
+                if child.label == "Overview":
+                    child.style = disnake.ButtonStyle.primary if page == "overview" else disnake.ButtonStyle.secondary
+                else:
+                    child.style = disnake.ButtonStyle.primary if page.lower() == child.label.lower() else disnake.ButtonStyle.secondary
+                    
+        try:
+            if page == "overview":
+                character = await get_character(self.character_name)
+                embed = build_character_embed(character, self.category)
+            else:
+                full_page_title = f"{self.character_name}/{page}"
+                wiki_page = await asyncio.to_thread(mystic.WikiPage, full_page_title)
+                
+                embed = disnake.Embed(
+                    title=f"📖 {wiki_page.name}",
+                    description=wiki_page.overview or "No description available.",
+                    url=wiki_page.url,
+                    color=0x6366F1
+                )
+                if wiki_page.image and wiki_page.image != "No image found.":
+                    embed.set_thumbnail(url=wiki_page.image)
+                else:
+                    # Fallback to main character's thumbnail
+                    try:
+                        character = await get_character(self.character_name)
+                        if character.image and character.image != "No Image exists yet.":
+                            embed.set_thumbnail(url=character.image)
+                    except Exception:
+                        pass
+            
+            await inter.edit_original_message(embed=embed, view=self)
+        except Exception as e:
+            await inter.edit_original_message(content=f"⚠️ Error loading page: {e}")
 
 
 class CharacterCommands(commands.Cog):
@@ -194,6 +255,9 @@ class CharacterCommands(commands.Cog):
             if subpages:
                 view = CharacterSubpageView(resolved_name, subpages, "overview", category)
                 await ctx.edit_original_response(embed=embed, view=view)
+                # Warm cache for all sub-pages in the background
+                for sp in subpages:
+                    asyncio.create_task(pre_fetch_subpage(sp))
             else:
                 await ctx.edit_original_response(embed=embed)
             
@@ -328,69 +392,6 @@ class CharacterCommands(commands.Cog):
         # Universal search: do not filter out sub-pages
         suggestions = await fetch_suggestions(string)
         return suggestions[:25]
-
-    @commands.Cog.listener()
-    async def on_button_click(self, inter: disnake.MessageInteraction):
-        """Listener to handle character profile subpage button clicks."""
-        custom_id = inter.component.custom_id
-        if not custom_id or not custom_id.startswith("char_subpage:"):
-            return
-            
-        parts = custom_id.split(":", 3)
-        if len(parts) < 4:
-            return
-            
-        _, character_name, page, category = parts
-        
-        await inter.response.defer()
-        
-        try:
-            # Re-fetch sub-pages to reconstruct the view
-            suggestions = await fetch_suggestions(character_name + "/")
-            prefix = character_name.lower() + "/"
-            subpages = []
-            for s in suggestions:
-                if s.lower().startswith(prefix) and "gallery" not in s.lower():
-                    subpages.append(s)
-            
-            preferred_order = ["history", "abilities", "quotes", "relationships", "equipment", "fights", "progress"]
-            def get_sort_key(s):
-                suffix = s.split("/")[-1].lower()
-                if suffix in preferred_order:
-                    return preferred_order.index(suffix)
-                return len(preferred_order)
-            subpages.sort(key=get_sort_key)
-            subpages = subpages[:4]
-            
-            view = CharacterSubpageView(character_name, subpages, page, category)
-            
-            if page == "overview":
-                character = await get_character(character_name)
-                embed = build_character_embed(character, category)
-            else:
-                full_page_title = f"{character_name}/{page}"
-                wiki_page = await asyncio.to_thread(mystic.WikiPage, full_page_title)
-                
-                embed = disnake.Embed(
-                    title=f"📖 {wiki_page.name}",
-                    description=wiki_page.overview or "No description available.",
-                    url=wiki_page.url,
-                    color=0x6366F1
-                )
-                if wiki_page.image and wiki_page.image != "No image found.":
-                    embed.set_thumbnail(url=wiki_page.image)
-                else:
-                    # Fallback to main character's thumbnail
-                    try:
-                        character = await get_character(character_name)
-                        if character.image and character.image != "No Image exists yet.":
-                            embed.set_thumbnail(url=character.image)
-                    except Exception:
-                        pass
-            
-            await inter.edit_original_message(embed=embed, view=view)
-        except Exception as e:
-            await inter.edit_original_message(content=f"⚠️ Error loading page: {e}")
 
 
 def setup(bot):
