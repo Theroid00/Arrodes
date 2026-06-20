@@ -90,6 +90,7 @@ class Pathway:
         cache_dir = os.path.join(project_dir, ".cache")
         os.makedirs(cache_dir, exist_ok=True)
         cache_path = os.path.join(cache_dir, f"{self.url_name}.html")
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
 
         html_content = None
         if os.path.exists(cache_path):
