@@ -11,16 +11,34 @@ echo "================================================"
 echo "   Arrodes Discord Bot - Oracle Cloud Setup"
 echo "================================================"
 
-# ── 1. System update ────────────────────────────────────────
-echo "[1/6] Updating system packages..."
-sudo apt-get update -qq && sudo apt-get upgrade -y -qq
+# ── 1. System update & Dependency check ─────────────────────
+echo "[1/6] Updating system packages and checking dependencies..."
+if command -v apt-get &> /dev/null; then
+    sudo apt-get update -qq && sudo apt-get upgrade -y -qq
+    if ! command -v git &> /dev/null; then
+        sudo apt-get install -y -qq git
+    fi
+elif command -v dnf &> /dev/null; then
+    sudo dnf update -y -q
+    if ! command -v git &> /dev/null; then
+        sudo dnf install -y -q git
+    fi
+elif command -v yum &> /dev/null; then
+    sudo yum update -y -q
+    if ! command -v git &> /dev/null; then
+        sudo yum install -y -q git
+    fi
+fi
 
 # ── 2. Install Docker ───────────────────────────────────────
 echo "[2/6] Installing Docker..."
 if ! command -v docker &> /dev/null; then
     curl -fsSL https://get.docker.com | sudo sh
+    if command -v systemctl &> /dev/null; then
+        sudo systemctl enable --now docker
+    fi
     sudo usermod -aG docker "$USER"
-    echo "      Docker installed."
+    echo "      Docker installed and service started."
 else
     echo "      Docker already installed, skipping."
 fi
@@ -60,7 +78,7 @@ fi
 
 # ── 6. Build and launch the bot ─────────────────────────────
 echo "[6/6] Building Docker image and starting the bot..."
-# Use newgrp to ensure docker group membership is active without re-login
+# Run docker-compose
 sudo docker-compose up --build -d
 
 echo ""
