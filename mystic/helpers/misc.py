@@ -1,5 +1,7 @@
 """Helper functions for miscellaneous tasks"""
 
+import re
+
 EXCLUDED_WORDS = {
     "of", "in", "with", "from", "through", "during", "including", "until", 
     "against", "among", "throughout", "despite", "towards", "upon", 
@@ -28,4 +30,23 @@ def format_name(text):
             capitalized_words.append(word.capitalize())
 
     return "_".join(capitalized_words)
+
+
+def clean_text(text: str) -> str:
+    """
+    Strips citation brackets (e.g. [1], [Note 1]) and handles whitespace cleanly.
+
+    Parameters:
+    text (str): The input string to be cleaned.
+
+    Returns:
+    str: The cleaned string.
+    """
+    if not text:
+        return ""
+    # Remove citation brackets like [1], [Note 1]
+    cleaned = re.sub(r'\[[^\]]*\]', '', text)
+    # Normalize whitespaces
+    return " ".join(cleaned.split()).strip()
+
 

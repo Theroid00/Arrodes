@@ -2,6 +2,7 @@
 
 from typing import Optional
 from mystic import objectStructures
+import mystic.helpers as helpers
 
 
 class Character(objectStructures.CharacterStructure):
@@ -71,7 +72,6 @@ class Character(objectStructures.CharacterStructure):
         self.intro = self.get_intro()
         self.honorific_name = self.get_honorific_name()
         self.symbol = self.get_symbol()
-        
 
     def get_name(self) -> Optional[str]:
         """
@@ -80,7 +80,6 @@ class Character(objectStructures.CharacterStructure):
         Returns:
         str: The name of the character.
         """
-
         try:
             return self.parsed.find("h2", class_="pi-title").text
         except AttributeError:
@@ -93,7 +92,6 @@ class Character(objectStructures.CharacterStructure):
         Returns:
         list[tuple]: The Chinese names of the character.
         """
-
         try:
             names = []
             head = self.parsed.find("h3", string="Chinese")
@@ -122,24 +120,24 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             str: The birth information of the character, or None if not found.
         """
-
         head = self.parsed.find("h3", string="Birth")
         try:
-            return head.parent.find("div").text
+            return helpers.misc.clean_text(head.parent.find("div").text)
         except AttributeError:
             return None
 
     def get_gender(self) -> Optional[str]:
         """
-        Retrieves the gender of the character.
+        Retrieves the gender/sex of the character.
 
         Returns:
-            str: The gender of the character, or None if not found.
+            str: The gender/sex of the character, or None if not found.
         """
-
-        head = self.parsed.find("h3", string="Gender")
+        head = self.parsed.find("h3", string="Gender") or self.parsed.find("h3", string="Sex")
         try:
-            return head.parent.find("a").text
+            a_tag = head.parent.find("a")
+            val = a_tag.text if a_tag else head.parent.find("div").text
+            return helpers.misc.clean_text(val)
         except AttributeError:
             return None
 
@@ -150,24 +148,21 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             list: A list of species of the character.
         """
-
         species = []
         head = self.parsed.find("h3", string="Species")
         try:
             data = head.parent.find("div")
             children = data.findAll("li")
             if len(children) == 0:
-                try:
-                    return data.text[: data.text.index("[")]
-                except ValueError:
-                    species.append(data.text)
-            for child in data.findAll("li"):
-                try:
-                    specie = child.text[: child.text.index("[")]
-                except ValueError:
-                    specie = child.text
-                species.append(specie)
-            return species
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    species.append(text)
+                return species if species else None
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    species.append(text)
+            return species if species else None
         except AttributeError:
             return None
 
@@ -178,24 +173,21 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             Optional[list]: A list of heights, or None if not found.
         """
-
         heights = []
         head = self.parsed.find("h3", string="Height")
         try:
             data = head.parent.find("div")
             children = data.findAll("li")
             if len(children) == 0:
-                try:
-                    return data.text[: data.text.index("[")]
-                except ValueError:
-                    heights.append(data.text)
-            for child in data.findAll("li"):
-                try:
-                    height = child.text[: child.text.index("[")]
-                except ValueError:
-                    height = child.text
-                heights.append(height)
-            return heights
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    heights.append(text)
+                return heights if heights else None
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    heights.append(text)
+            return heights if heights else None
         except AttributeError:
             return None
 
@@ -205,26 +197,22 @@ class Character(objectStructures.CharacterStructure):
 
         Returns:
             list: A list of eye color(s) of the character.
-                  If the eye color is not found, returns None.
         """
-
         eyes = []
         head = self.parsed.find("h3", string="Eye")
         try:
             data = head.parent.find("div")
             children = data.findAll("li")
             if len(children) == 0:
-                try:
-                    return data.text[: data.text.index("[")]
-                except ValueError:
-                    eyes.append(data.text)
-            for child in data.findAll("li"):
-                try:
-                    eye = child.text[: child.text.index("[")]
-                except ValueError:
-                    eye = child.text
-                eyes.append(eye)
-            return eyes
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    eyes.append(text)
+                return eyes if eyes else None
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    eyes.append(text)
+            return eyes if eyes else None
         except AttributeError:
             return None
 
@@ -234,26 +222,22 @@ class Character(objectStructures.CharacterStructure):
 
         Returns:
             list: A list of hair color(s) of the character.
-                  If no hair color is found, returns None.
         """
-
         hairs = []
         head = self.parsed.find("h3", string="Hair")
         try:
             data = head.parent.find("div")
             children = data.findAll("li")
             if len(children) == 0:
-                try:
-                    return data.text[: data.text.index("[")]
-                except ValueError:
-                    hairs.append(data.text)
-            for child in data.findAll("li"):
-                try:
-                    hair = child.text[: child.text.index("[")]
-                except ValueError:
-                    hair = child.text
-                hairs.append(hair)
-            return hairs
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    hairs.append(text)
+                return hairs if hairs else None
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    hairs.append(text)
+            return hairs if hairs else None
         except AttributeError:
             return None
 
@@ -264,28 +248,23 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             Optional[list]: A list of aliases, or None if not found.
         """
-
         aliases = []
         head = self.parsed.find("h3", string="Aliases")
-
         try:
-            head.parent
+            data = head.parent.find("div")
+            children = data.findAll("li")
+            if len(children) == 0:
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    aliases.append(text)
+                return aliases if aliases else None
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    aliases.append(text)
+            return aliases if aliases else None
         except AttributeError:
             return None
-
-        lists = head.parent.find_all("li")
-
-        if len(lists) == 0:
-            aliases.append(head.parent.find("div").text)
-
-        for li in lists:
-            try:
-                text = li.text[: li.text.index("[")]
-            except ValueError:
-                text = li.text
-            aliases.append(text)
-
-        return aliases
 
     def get_titles(self) -> Optional[list]:
         """
@@ -294,10 +273,8 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             Optional[list]: A list of titles, or None if not found.
         """
-
         titles = []
         head = self.parsed.find("h3", string="Titles")
-
         try:
             head.parent
         except AttributeError:
@@ -305,25 +282,30 @@ class Character(objectStructures.CharacterStructure):
 
         lists = head.parent.find_all("li")
         if len(lists) == 0:
-            titles.append(head.parent.find("div"))
+            text = helpers.misc.clean_text(head.parent.find("div").text)
+            if text:
+                titles.append(text)
+            return titles if titles else None
 
+        import copy
         for li in lists:
-            s_text = ""
-            for span in li.find_all("span"):
-                try:
-                    span["style"]
-                except KeyError:
+            li_copy = copy.copy(li)
+            desc_spans = []
+            for span in li_copy.find_all("span"):
+                if getattr(span, "attrs", None) is None:
                     continue
-                try:
-                    s_text += span.text[: span.text.index("[")]
-                except ValueError:
-                    s_text += span.text
-            try:
-                text = f"{li.text[:li.text.index('[')]} ({s_text})"
-            except ValueError:
-                text = li.text + s_text
-            titles.append(text)
-        return titles
+                if span.get("style"):
+                    desc_text = helpers.misc.clean_text(span.text)
+                    if desc_text:
+                        desc_spans.append(desc_text)
+                    span.decompose()
+            main_text = helpers.misc.clean_text(li_copy.text)
+            desc_str = ", ".join(desc_spans)
+            if desc_str:
+                titles.append(f"{main_text} ({desc_str})")
+            elif main_text:
+                titles.append(main_text)
+        return titles if titles else None
 
     def get_pathways(self) -> Optional[list]:
         """
@@ -332,27 +314,32 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             Optional[list]: A list of pathway names, or None if not found.
         """
-
         pathways = []
         head = self.parsed.find("h3", string="Pathway(s)")
-
+        if not head:
+            # Fallback to checking the Authorities label
+            head = self.parsed.find("h3", string="Authorities")
+        
+        if not head:
+            return None
+            
         try:
-            head.parent
+            # If it has links, extract text from links
+            for a in head.parent.find_all("a"):
+                if a.text.strip():
+                    text = helpers.misc.clean_text(a.text)
+                    if text and text not in pathways:
+                        pathways.append(text)
+            # If no links, try to split plain text
+            if not pathways:
+                div_text = head.parent.find("div").text
+                for word in div_text.split():
+                    cleaned_word = helpers.misc.clean_text(word)
+                    if cleaned_word and cleaned_word not in pathways:
+                        pathways.append(cleaned_word)
+            return pathways if pathways else None
         except AttributeError:
             return None
-
-        for a in head.parent.find_all("a"):
-            if not a.text == "":
-                try:
-                    a["title"]
-                except KeyError:
-                    continue
-                try:
-                    l = a.text[: a.text.index("[")]
-                    pathways.append(l)
-                except (ValueError, KeyError):
-                    pathways.append(a.text)
-        return pathways
 
     def get_authorities(self) -> Optional[list]:
         """
@@ -361,29 +348,21 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             Optional[list]: The list of authorities, or None if not found.
         """
-
         authorities = []
         head = self.parsed.find("h3", string="Authorities")
-
         try:
             head.parent
         except AttributeError:
             return None
 
         for a in head.parent.find_all("a"):
-            if not a.text == "":
-                try:
-                    a["title"]
-                except KeyError:
+            if a.text.strip():
+                if not a.get("title"):
                     continue
-                try:
-                    text = a.text[: a.text.index("[")]
-                except (ValueError, KeyError):
-                    text = a.text
-                authorities.append(text)
-        if len(authorities) == 0:
-            return None
-        return authorities
+                text = helpers.misc.clean_text(a.text)
+                if text:
+                    authorities.append(text)
+        return authorities if authorities else None
 
     def get_relatives(self) -> Optional[list]:
         """
@@ -392,28 +371,23 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             Optional[list]: A list of relatives, or None if not found.
         """
-
         relatives = []
         head = self.parsed.find("h3", string="Relative(s)")
-
         try:
-            head.parent
+            data = head.parent.find("div")
+            children = data.findAll("li")
+            if len(children) == 0:
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    relatives.append(text)
+                return relatives if relatives else None
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    relatives.append(text)
+            return relatives if relatives else None
         except AttributeError:
             return None
-
-        lists = head.parent.find_all("li")
-
-        if len(lists) == 0:
-            relatives.append(head.parent.find("div").text)
-
-        for li in lists:
-            try:
-                text = li.text[: li.text.index("[")]
-            except ValueError:
-                text = li.text
-            relatives.append(text)
-
-        return relatives
 
     def get_masters(self) -> Optional[list]:
         """
@@ -422,28 +396,23 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             Optional[list]: A list of masters, or None if not found.
         """
-
         masters = []
         head = self.parsed.find("h3", string="Master(s)")
-
         try:
-            head.parent
+            data = head.parent.find("div")
+            children = data.findAll("li")
+            if len(children) == 0:
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    masters.append(text)
+                return masters if masters else None
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    masters.append(text)
+            return masters if masters else None
         except AttributeError:
             return None
-
-        lists = head.parent.find_all("li")
-
-        if len(lists) == 0:
-            masters.append(head.parent.find("div").text)
-
-        for li in lists:
-            try:
-                text = li.text[: li.text.index("[")]
-            except ValueError:
-                text = li.text
-            masters.append(text)
-
-        return masters
 
     def get_enemies(self) -> Optional[list]:
         """
@@ -452,28 +421,23 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             Optional[list]: A list of enemies, or None if not found.
         """
-
         enemies = []
         head = self.parsed.find("h3", string="Enemie(s)")
-
         try:
-            head.parent
+            data = head.parent.find("div")
+            children = data.findAll("li")
+            if len(children) == 0:
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    enemies.append(text)
+                return enemies if enemies else None
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    enemies.append(text)
+            return enemies if enemies else None
         except AttributeError:
             return None
-
-        lists = head.parent.find_all("li")
-
-        if len(lists) == 0:
-            enemies.append(head.parent.find("div").text)
-
-        for li in lists:
-            try:
-                text = li.text[: li.text.index("[")]
-            except ValueError:
-                text = li.text
-            enemies.append(text)
-
-        return enemies
 
     def get_allies(self) -> Optional[list]:
         """
@@ -482,28 +446,23 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             Optional[list]: A list of allies, or None if not found.
         """
-
         allies = []
         head = self.parsed.find("h3", string="Allies")
-
         try:
-            head.parent
+            data = head.parent.find("div")
+            children = data.findAll("li")
+            if len(children) == 0:
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    allies.append(text)
+                return allies if allies else None
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    allies.append(text)
+            return allies if allies else None
         except AttributeError:
             return None
-
-        lists = head.parent.find_all("li")
-
-        if len(lists) == 0:
-            return head.parent.find("div").text
-
-        for li in lists:
-            try:
-                text = li.text[: li.text.index("[")]
-            except ValueError:
-                text = li.text
-            allies.append(text)
-
-        return allies
 
     def get_image(self) -> str:
         """
@@ -511,9 +470,7 @@ class Character(objectStructures.CharacterStructure):
 
         Returns:
             str: The URL of the character's image.
-                If no image exists, returns "No Image exists yet."
         """
-
         try:
             figure_header = self.parsed.find("figure", class_="pi-item pi-image")
             return figure_header.find("img")["src"]
@@ -527,28 +484,23 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             Optional[list]: A list of affiliations, or None if not found.
         """
-
         affiliations = []
         head = self.parsed.find("h3", string="Affiliation(s)")
-
         try:
-            head.parent
+            data = head.parent.find("div")
+            children = data.findAll("li")
+            if len(children) == 0:
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    affiliations.append(text)
+                return affiliations if affiliations else None
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    affiliations.append(text)
+            return affiliations if affiliations else None
         except AttributeError:
             return None
-
-        lists = head.parent.find_all("li")
-
-        if len(lists) == 0:
-            affiliations.append(head.parent.find("div").text)
-
-        for li in lists:
-            try:
-                text = li.text[: li.text.index("[")]
-            except ValueError:
-                text = li.text
-            affiliations.append(text)
-
-        return affiliations
 
     def get_occupation(self) -> Optional[list]:
         """
@@ -557,28 +509,23 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             Optional[list]: A list of occupations, or None if not found.
         """
-
         occupations = []
         head = self.parsed.find("h3", string="Occupation(s)")
-
         try:
-            head.parent
+            data = head.parent.find("div")
+            children = data.findAll("li")
+            if len(children) == 0:
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    occupations.append(text)
+                return occupations if occupations else None
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    occupations.append(text)
+            return occupations if occupations else None
         except AttributeError:
             return None
-
-        lists = head.parent.find_all("li")
-
-        if len(lists) == 0:
-            occupations.append(head.parent.find("div").text)
-
-        for li in lists:
-            try:
-                text = li.text[: li.text.index("[")]
-            except ValueError:
-                text = li.text
-            occupations.append(text)
-
-        return occupations
 
     def get_religion(self) -> Optional[list]:
         """
@@ -587,28 +534,23 @@ class Character(objectStructures.CharacterStructure):
         Returns:
             Optional[list]: A list of religions, or None if not found.
         """
-
         religions = []
         head = self.parsed.find("h3", string="Religion(s)")
-
         try:
-            head.parent
+            data = head.parent.find("div")
+            children = data.findAll("li")
+            if len(children) == 0:
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    religions.append(text)
+                return religions if religions else None
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    religions.append(text)
+            return religions if religions else None
         except AttributeError:
             return None
-
-        lists = head.parent.find_all("li")
-
-        if len(lists) == 0:
-            religions.append(head.parent.find("div").text)
-
-        for li in lists:
-            try:
-                text = li.text[: li.text.index("[")]
-            except ValueError:
-                text = li.text
-            religions.append(text)
-
-        return religions
 
     def get_origin(self) -> list:
         """
@@ -619,25 +561,21 @@ class Character(objectStructures.CharacterStructure):
         """
         origins = []
         head = self.parsed.find("h3", string="Origin")
-
         try:
-            head.parent
+            data = head.parent.find("div")
+            children = data.findAll("li")
+            if len(children) == 0:
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    origins.append(text)
+                return origins
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    origins.append(text)
+            return origins
         except AttributeError:
             return []
-
-        lists = head.parent.find_all("li")
-
-        if len(lists) == 0:
-            origins.append(head.parent.find("div").text)
-
-        for li in lists:
-            try:
-                text = li.text[: li.text.index("[")]
-            except ValueError:
-                text = li.text
-            origins.append(text)
-
-        return origins
 
     def get_residence(self) -> list:
         """
@@ -648,25 +586,21 @@ class Character(objectStructures.CharacterStructure):
         """
         residences = []
         head = self.parsed.find("h3", string="Residence")
-
         try:
-            head.parent
+            data = head.parent.find("div")
+            children = data.findAll("li")
+            if len(children) == 0:
+                text = helpers.misc.clean_text(data.text)
+                if text:
+                    residences.append(text)
+                return residences
+            for child in children:
+                text = helpers.misc.clean_text(child.text)
+                if text:
+                    residences.append(text)
+            return residences
         except AttributeError:
             return []
-
-        lists = head.parent.find_all("li")
-
-        if len(lists) == 0:
-            residences.append(head.parent.find("div").text)
-
-        for li in lists:
-            try:
-                text = li.text[: li.text.index("[")]
-            except ValueError:
-                text = li.text
-            residences.append(text)
-
-        return residences
 
     def get_intro(self) -> list:
         """
@@ -680,9 +614,9 @@ class Character(objectStructures.CharacterStructure):
         poem_ps = [p for div in poem_divs for p in div.find_all("p")]
 
         intros = [intro for intro in intros if intro not in poem_ps]
-        intro_texts = [p.text.strip() for p in intros if p.text.strip()]
+        intro_texts = [helpers.misc.clean_text(p.text) for p in intros if p.text.strip()]
 
-        return intro_texts
+        return [t for t in intro_texts if t]
 
     def get_honorific_name(self) -> list[str]:
         """
@@ -692,30 +626,24 @@ class Character(objectStructures.CharacterStructure):
             list: A list of honorific name strings.
         """
         honorific = self.parsed.find_all("div", class_="poem")
-        
-        
-        
         for div in honorific:
             for span in div.find_all("span", class_="refpopups-custom-content mobile-hidden", style="display:none"):
                 span.decompose()
        
-        honorific_text = [p.text.strip() for p in honorific[1:2]]
+        honorific_text = [helpers.misc.clean_text(p.text) for p in honorific[1:2]]
 
-        if honorific_text == []:
-            honorific_text = [p.text.strip() for p in honorific[0:1]]
-        
-       
-        
+        if not honorific_text or honorific_text == [""]:
+            honorific_text = [helpers.misc.clean_text(p.text) for p in honorific[0:1]]
 
-        return (honorific_text)
+        return [t for t in honorific_text if t]
     
     def get_symbol(self) -> str:
-        
-        '''Retrieves the symbol of the character.
+        """
+        Retrieves the symbol of the character.
         
         Returns:
             An image representing the symbol of mysticism of the character.
-        '''
+        """
         try:
             symbol = self.parsed.find("h2", string="Mysticism")
             symbols = symbol.parent.find("figure", class_="pi-item pi-image")
@@ -723,6 +651,7 @@ class Character(objectStructures.CharacterStructure):
             return symbols
         except (AttributeError, TypeError, KeyError):
             return "The Character does not have a Mysticism Symbol."
+
         
     
    
