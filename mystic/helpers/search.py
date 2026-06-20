@@ -28,6 +28,33 @@ POPULAR_FALLBACKS = [
 ]
 
 
+def sort_suggestions(suggestions: list[str], query: str) -> list[str]:
+    """Sorts search suggestions based on match relevance (exact, prefix, word prefix, substring)."""
+    cleaned_query = query.strip().lower()
+    if not cleaned_query:
+        return suggestions
+
+    def score(title: str) -> tuple[int, int, str]:
+        title_lower = title.lower()
+        # 1. Exact match
+        if title_lower == cleaned_query:
+            return (0, len(title), title_lower)
+        # 2. Starts with query
+        if title_lower.startswith(cleaned_query):
+            return (1, len(title), title_lower)
+        # 3. Word starts with query
+        words = title_lower.split()
+        if any(w.startswith(cleaned_query) for w in words):
+            return (2, len(title), title_lower)
+        # 4. Substring match
+        if cleaned_query in title_lower:
+            return (3, len(title), title_lower)
+        # 5. Fallback
+        return (4, len(title), title_lower)
+
+    return sorted(suggestions, key=score)
+
+
 async def fetch_suggestions(query: str) -> list[str]:
     """
     Queries the Fandom MediaWiki opensearch endpoint to get autocomplete suggestions.
@@ -59,7 +86,8 @@ async def fetch_suggestions(query: str) -> list[str]:
                     data = await response.json()
                     # OpenSearch format: [query, [titles], [descriptions], [urls]]
                     if len(data) >= 2:
-                        return [str(title) for title in data[1]]
+                        titles = [str(title) for title in data[1]]
+                        return sort_suggestions(titles, cleaned_query)
     except Exception as e:
         print(f"Warning: Autocomplete API error for query '{query}': {e}")
         

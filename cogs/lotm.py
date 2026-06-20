@@ -168,13 +168,14 @@ class CharacterCommands(commands.Cog):
         await ctx.response.defer()
         try:
             character = await get_character(character_name)
+            resolved_name = character.get_name() or character.url_name.replace("_", " ")
             
             # Build the base embed
             embed = build_character_embed(character, category)
             
             # Fetch sub-pages for the character
-            suggestions = await fetch_suggestions(character_name + "/")
-            prefix = character_name.lower() + "/"
+            suggestions = await fetch_suggestions(resolved_name + "/")
+            prefix = resolved_name.lower() + "/"
             subpages = []
             for s in suggestions:
                 if s.lower().startswith(prefix) and "gallery" not in s.lower():
@@ -191,7 +192,7 @@ class CharacterCommands(commands.Cog):
             subpages = subpages[:4]  # Limit to 4 sub-pages to fit nicely in 1 row of 5 buttons
             
             if subpages:
-                view = CharacterSubpageView(character_name, subpages, "overview", category)
+                view = CharacterSubpageView(resolved_name, subpages, "overview", category)
                 await ctx.edit_original_response(embed=embed, view=view)
             else:
                 await ctx.edit_original_response(embed=embed)
@@ -387,9 +388,9 @@ class CharacterCommands(commands.Cog):
                     except Exception:
                         pass
             
-            await inter.edit_original_response(embed=embed, view=view)
+            await inter.edit_original_message(embed=embed, view=view)
         except Exception as e:
-            await inter.edit_original_response(content=f"⚠️ Error loading page: {e}")
+            await inter.edit_original_message(content=f"⚠️ Error loading page: {e}")
 
 
 def setup(bot):
