@@ -11,7 +11,6 @@ pinned: false
 # Arrodes 
 
 [![Invite Bot](https://img.shields.io/badge/Discord-Invite%20Bot-5865F2?logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1189633573611913328)
-[![Discord Invite](https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord&logoColor=white)](https://discord.gg/YOUR_INVITE_LINK)
 [![Status](https://img.shields.io/badge/Status-Active%20(VPS%2024%2F7)-success?logo=skynet&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1189633573611913328)
 
 Arrodes is an advanced Discord bot built using the `disnake` library. Designed to streamline server management, boost community engagement, and offer dynamic features alongside seamless API integrations.
