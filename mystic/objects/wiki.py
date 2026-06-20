@@ -31,8 +31,8 @@ class WikiPage:
         project_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         cache_dir = os.path.join(project_dir, ".cache")
         os.makedirs(cache_dir, exist_ok=True)
-        safe_cache_name = self.url_name.replace("/", "@")
-        cache_path = os.path.join(cache_dir, f"{safe_cache_name}.html")
+        cache_path = os.path.join(cache_dir, f"{self.url_name}.html")
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
 
         html_content = None
         if os.path.exists(cache_path):

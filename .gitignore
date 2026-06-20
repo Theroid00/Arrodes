@@ -20,3 +20,10 @@ env/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Developer test files
+scratch/
+
+# Local-only documentation
+update.md
+
